@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GLOBAL_DB="$HOME/.this_commands"
+GLOBAL_DB="$HOME/.this"
 touch "$GLOBAL_DB"
 
 get_local_files() {
@@ -55,9 +55,6 @@ get_combined_list() {
     shopt -u nullglob
 }
 
-export -f get_combined_list
-export GLOBAL_DB
-
 local_exists=0
 shopt -s nullglob
 for f in *.this; do [ -f "$f" ] && local_exists=1 && break; done
@@ -69,67 +66,70 @@ if [ ! -s "$GLOBAL_DB" ] && [ "$local_exists" -eq 0 ]; then
 fi
 
 selected=$(get_combined_list | fzf \
-    --header "ENTER: Run | CTRL-D: Delete | ESC: Exit" \
+    --header "ENTER: Run | ESC: Exit" \
     --with-nth 2.. \
     --preview "echo {2..}" \
     --preview-window="bottom:3:wrap" \
-    --bind "ctrl-d:execute-silent(
-        line_num=\$(echo {} | awk '{print \$1}');
-        origin=\$(echo {} | awk -F' | ' '{print \$NF}');
-        sed -i \"\${line_num}d\" \"\$origin\"
-    )+reload(bash -c get_combined_list)" \
     --height 40% --reverse)
 
 if [ -n "$selected" ]; then
-    clean_line=$(echo "$selected" | sed 's/^[0-9]\+[[:space:]]*//' | sed 's/ | .*$//')
-    cmd_to_run="${clean_line#* | }"
+    no_num=$(echo "$selected" | sed 's/^[0-9]\+[[:space:]]*//')
+    no_path="${no_num% | *}"
+    cmd_to_run="${no_path#* | }"
+
+    declare -A seen_vars
 
     while [[ "$cmd_to_run" =~ \{\{([^}]+)\}\} ]]; do
         full_match="${BASH_REMATCH[0]}"
         inner="${BASH_REMATCH[1]}"
 
-        is_optional=false
-        val=""
-
-        if [[ "$inner" == *":"* ]]; then
-            label_part="${inner%%:*}"
-            options_raw="${inner#*:}"
-
-            if [[ "$label_part" == *"?" ]]; then
-                is_optional=true
-                label="${label_part%?}"
-                options_raw="(None),$options_raw"
-            else
-                label="$label_part"
-            fi
-
-            val=$(echo "$options_raw" | tr ',' '\n' | fzf --height 15% --reverse --header "Select $label:")
-
-            if [[ "$val" == "(None)" ]] || [[ -z "$val" && "$is_optional" = true ]]; then
-                val=""
-            fi
+        label_part="${inner%%:*}"
+        if [[ "$label_part" == *"?" ]]; then
+            label="${label_part%?}"
         else
-            label_part="$inner"
-            if [[ "$label_part" == *"?" ]]; then
-                is_optional=true
-                label="${label_part%?}"
+            label="$label_part"
+        fi
+
+        if [[ -v "seen_vars[$label]" ]]; then
+            val="${seen_vars[$label]}"
+        else
+            is_optional=false
+            val=""
+
+            if [[ "$inner" == *":"* ]]; then
+                options_raw="${inner#*:}"
+
+                if [[ "$label_part" == *"?" ]]; then
+                    is_optional=true
+                    options_raw="(None),$options_raw"
+                fi
+
+                val=$(echo "$options_raw" | tr ',' '\n' | fzf --height 15% --reverse --header "Select $label:")
+
+                if [[ "$val" == "(None)" ]] || [[ -z "$val" && "$is_optional" = true ]]; then
+                    val=""
+                fi
             else
-                label="$label_part"
+                if [[ "$label_part" == *"?" ]]; then
+                    is_optional=true
+                fi
+
+                while true; do
+                    prompt_text="\033[1;34m$label\033[0m"
+                    [ "$is_optional" = true ] && prompt_text="$prompt_text [optional]"
+
+                    printf "$prompt_text: "
+                    read -r val
+
+                    if [ -z "$val" ] && [ "$is_optional" = false ]; then
+                        echo -e "\033[0;31mError: $label is required.\033[0m"
+                        continue
+                    fi
+                    break
+                done
             fi
 
-            while true; do
-                prompt_text="\033[1;34m$label\033[0m"
-                [ "$is_optional" = true ] && prompt_text="$prompt_text [optional]"
-
-                printf "$prompt_text: "
-                read -r val
-
-                if [ -z "$val" ] && [ "$is_optional" = false ]; then
-                    echo -e "\033[0;31mError: $label is required.\033[0m"
-                    continue
-                fi
-                break
-            done
+            seen_vars[$label]="$val"
         fi
 
         cmd_to_run="${cmd_to_run//"$full_match"/$val}"
