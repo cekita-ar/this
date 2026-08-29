@@ -2,7 +2,7 @@
     WARNING:
 
     This file is heavily done by Google Gemini since i never used ratatui and I knew it will take a while.
-    Therefore, there might be some issues hiding somethere I didn't check.
+    Therefore, there might be some issues hiding somewhere I didn't check.
     Tho I've read the entire code, I've maybe gotten skill issued.
 */
 

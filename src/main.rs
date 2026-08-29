@@ -95,14 +95,19 @@ fn main() {
 
         match ui::run(&commands) {
             Ok(Some(command)) => {
-                let output = std::process::Command::new("sh")
-                    .arg("-c")
-                    .arg(&command)
-                    .output()
-                    .expect("Failed to execute command");
-
                 println!("Running: {}\n", command);
-                print!("{}", String::from_utf8_lossy(&output.stdout));
+
+                if cfg!(target_os = "windows") {
+                    std::process::Command::new("cmd")
+                        .args(["/C", &command])
+                        .status()
+                        .expect("Failed to execute command");
+                } else {
+                    std::process::Command::new("sh")
+                        .args(["-c", &command])
+                        .status()
+                        .expect("Failed to execute command");
+                };
             }
             Ok(None) => println!("No command selected."),
             Err(err) => eprintln!("Error rendering TUI: {}", err),
