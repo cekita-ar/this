@@ -7,40 +7,49 @@ It aims to solve the "fuck i forgot the command to \_" or "this is so long to ty
 
 ## installation
 
-It's just a bash file, download and add to `$PATH`
+It's just a binary, download and add to `$PATH`
 
-Tho it depends on:
-- [fzf](https://github.com/junegunn/fzf)
-- bash
-- standar POSIX utils _(awk, sed, tr, cat, touch)_
-
-For most systems you should be just good to go with:
-
+Available systems:
+- AArch64 (ARM64) Linux
+```bash
+curl -sSL https://github.com/cekita-ar/this/releases/download/mayor/aarm64_linux_this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
 ```
-curl -sSL https://raw.githubusercontent.com/cekita-ar/this/refs/heads/main/this -o this && chmod +x ./this && sudo mv ./this /usr/local/bin
+
+- x86_64 Linux
+```bash
+curl -sSL https://github.com/cekita-ar/this/releases/download/mayor/x86_64_linux_this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
+```
+
+- x86_64 Windows
+```ps1
+curl -sSL "https://github.com/cekita-ar/this/releases/download/mayor/x86_64_windows_this.exe" -OutFile "this.exe" ; Move-Item -Path "this.exe" -Destination "C:\Windows\System32\"
 ```
 
 ## Syntax and usage:
 
-**This** searches for commands in many files, one of them is the global `$HOME/.this` file, and in the local directory `*.this`
+**This** searches for commands in many files, one of them is the global `$HOME/.local/this/global.this` file, and in the current directory for `*.this`.
 
-Each file should have one command per line, and every line has two sections _(name and command)_ separated with `|`
+Each file should have one command per line, and every line has two sections _(name and command)_ separated with `|`.
 
-e.g.: `echo test | echo "Hello World!"`
+e.g.: `echo test | echo "Hello World!"`.
 
 ---
 
-Now, theres also templating as I advertised
+Now, theres also templating as I advertised.
 
-On every command section you can use `{{foo}}` to declare an string variable, by default it is required, but you can also use `?` to indicate that it's optional. e.g.: `{{my var?}}`
+On every command section you can use `{{foo}}` to declare an string variable, by default it is required, but you can also use `?` to indicate that it's optional. e.g.: `{{my_var?}}`.
 
-> Note that names with spaces are supported even tho it is recommendedn't
+You can also use lists with `{{foo:a,b,c}}` and `{{bar?:a,b,c}}`.
 
-You can also use lists with `{{foo:a,b,c}}` and `{{bar?:a,b,c}}`
+If you redeclare a variable it would simply ask again, since there's no variable tracking nor shadowing or anything like that.
 
-If you redeclare a variable it would simply be used **as is**, since there's no variable shadowing or anything like that
+e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"` <- here the `{{text?}}` would be interpreted as `{{text}}`.
 
-e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"` <- here the `{{text?}}` would be interpreted as `{{text}}`
+## Build from source
+
+You need `cross`, which can be installed by running: `cargo install cross --git https://github.com/cross-rs/cross`
+
+Then, just run: `for target in x86_64-unknown-linux-gnu x86_64-pc-windows-gnu aarch64-unknown-linux-gnu; do cross build --release --target $target; done`
 
 ---
 
