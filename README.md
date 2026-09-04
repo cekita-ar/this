@@ -47,9 +47,7 @@ e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"` <- here the `{{text?
 
 ## Build from source
 
-You need `cross`, which can be installed by running: `cargo install cross --git https://github.com/cross-rs/cross`
-
-Then, just run: `for target in x86_64-unknown-linux-gnu x86_64-pc-windows-gnu aarch64-unknown-linux-gnu; do cross build --release --target $target; done`
+As usual, run `cargo build --release`
 
 ---
 
