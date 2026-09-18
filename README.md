@@ -3,7 +3,7 @@
 
 You can say it is similar to, but simpler than [navi](https://github.com/denisidoro/navi).
 
-It aims to solve the "fuck i forgot the command to \_" or "this is so long to type everytime" problems, just write it on a file.
+It aims to solve the "fuck i forgot the command to \_" or "this is so long to type every time" problems, just write it on a file.
 
 ## installation
 
@@ -35,15 +35,15 @@ e.g.: `echo test | echo "Hello World!"`.
 
 ---
 
-Now, theres also templating as I advertised.
+Now, there's also templates as I advertised.
 
-On every command section you can use `{{foo}}` to declare an string variable, by default it is required, but you can also use `?` to indicate that it's optional. e.g.: `{{my_var?}}`.
+On every command section you can use `{{foo}}` to create a template, it is required by default, but you can use `?` to indicate that it's optional. e.g.: `{{my_var?}}`.
 
 You can also use lists with `{{foo:a,b,c}}` and `{{bar?:a,b,c}}`.
 
-If you redeclare a variable it would simply ask again, since there's no variable tracking nor shadowing or anything like that.
+Keep in mind that there *are not* variables, these are simply a text that's shown on the UI. 
 
-e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"` <- here the `{{text?}}` would be interpreted as `{{text}}`.
+e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"`
 
 ## Build from source
 
