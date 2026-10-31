@@ -42,7 +42,7 @@ fn main() {
             std::fs::create_dir_all(&local).expect("Could not create the app local directory.");
             local
         }
-        None => {
+        _ => {
             eprintln!("Unable to find local directory.");
             return;
         }
@@ -55,8 +55,8 @@ fn main() {
 
     if let (Some(add_val), Some(name_val)) = (args.add, args.name) {
         let new_command = Command {
-            name: add_val.clone(),
-            command: name_val,
+            name: name_val.clone(),
+            command: add_val,
             file_path: global_file.clone(),
         };
 
@@ -109,7 +109,7 @@ fn main() {
                         .expect("Failed to execute command");
                 };
             }
-            Ok(None) => println!("No command selected."),
+            Ok(_) => println!("No command selected."),
             Err(err) => eprintln!("Error rendering TUI: {}", err),
         }
     }
@@ -141,9 +141,9 @@ fn add_to_file(command: &Command, file_path: &Path) -> io::Result<()> {
         .create(true)
         .open(file_path)?;
 
-    let mut last_byte = [0u8; 1];
     let ends_with_newline = match file.seek(SeekFrom::End(-1)) {
         Ok(_) => {
+            let mut last_byte = [0u8; 1];
             file.read_exact(&mut last_byte)?;
             last_byte[0] == b'\n'
         }
