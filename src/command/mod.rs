@@ -17,7 +17,7 @@ pub fn extract_placeholders(template: &str) -> Vec<Placeholder> {
     for caps in re.captures_iter(template) {
         let raw = caps[0].to_string();
         let name = caps.name("name").unwrap().as_str().to_string();
-        let required = caps.name("opt").is_none(); // Si no hay '?', es obligatorio
+        let required = caps.name("opt").is_none();
 
         let options = caps.name("choices").map(|c| {
             c.as_str()
