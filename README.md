@@ -27,7 +27,7 @@ curl -sSL "https://github.com/cekita-ar/this/releases/download/latest/x86_64-win
 
 ## Syntax and usage:
 
-**This** searches for commands in many files, one of them is the global `$HOME/.local/this/global.this` file, and in the current directory for `*.this`.
+**This** searches for commands in many files, one of them is the global `$HOME/.local/share/this/global.this` file, and in the current directory for `*.this`.
 
 Each file should have one command per line, and every line has two sections _(name and command)_ separated with `|`.
 
