@@ -73,8 +73,8 @@ fn main() {
     } else {
         let mut files_to_parse: Vec<PathBuf> = Vec::new();
 
-        files_to_parse.push(global_file.clone());
         files_to_parse.append(&mut search_directory().unwrap_or_default());
+        files_to_parse.push(global_file.clone());
 
         let mut commands: Vec<Command> = Vec::new();
 
