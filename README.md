@@ -37,13 +37,16 @@ e.g.: `echo test | echo "Hello World!"`.
 
 Now, there's also templates as I advertised.
 
-On every command section you can use `{{foo}}` to create a template, it is required by default, but you can use `?` to indicate that it's optional. e.g.: `{{my_var?}}`.
+On every command section you can use `{{foo}}` to create a template.
+By default the `foo` template is optional, but you can use `!` to indicate that it must be not empty (required). e.g.: `{{foo!}}`.
 
-You can also use lists with `{{foo:a,b,c}}` and `{{bar?:a,b,c}}`.
+You can also use lists with `{{foo:a,b,c}}` and `{{bar!:a,b,c}}`.
 
-Keep in mind that there *are not* variables, these are simply a text that's shown on the UI. 
+Keep in mind that these *are not* variables, it's just text that's shown on the UI.
 
-e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text?}}"`
+e.g.: `echo test | echo "{{text:a,b}}" && echo "{{text!}}"`
+
+> Note that the option to input a custom text is always available.
 
 ## Build from source
 

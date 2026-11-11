@@ -136,65 +136,11 @@ pub fn run(commands: &[Command]) -> io::Result<Option<String>> {
                     text_input,
                     option_state,
                 } => {
-                    let current_p = &placeholders[*current_step];
+                    let current_placeholder = &placeholders[*current_step];
 
                     match key.code {
                         KeyCode::Esc => {
                             app_state = AppState::Browsing;
-                        }
-                        _ if current_p.options.is_some() => {
-                            let options = current_p.options.as_ref().unwrap();
-                            let total_options = if !current_p.required {
-                                options.len() + 1
-                            } else {
-                                options.len()
-                            };
-
-                            match key.code {
-                                KeyCode::Down | KeyCode::Char('j') => {
-                                    let next = match option_state.selected() {
-                                        Some(i) if i >= total_options - 1 => 0,
-                                        Some(i) => i + 1,
-                                        None => 0,
-                                    };
-                                    option_state.select(Some(next));
-                                }
-                                KeyCode::Up | KeyCode::Char('k') => {
-                                    let prev = match option_state.selected() {
-                                        Some(0) => total_options - 1,
-                                        Some(i) => i - 1,
-                                        None => 0,
-                                    };
-                                    option_state.select(Some(prev));
-                                }
-                                KeyCode::Enter => {
-                                    let chosen_value = match option_state.selected() {
-                                        Some(i) => {
-                                            if !current_p.required {
-                                                if i == 0 {
-                                                    String::new()
-                                                } else {
-                                                    options[i - 1].clone()
-                                                }
-                                            } else {
-                                                options[i].clone()
-                                            }
-                                        }
-                                        None => String::new(),
-                                    };
-
-                                    *command_template =
-                                        command_template.replace(&current_p.raw, &chosen_value);
-                                    *current_step += 1;
-                                    *text_input = String::new();
-                                    option_state.select(Some(0));
-
-                                    if *current_step >= placeholders.len() {
-                                        break Ok(Some(command_template.clone()));
-                                    }
-                                }
-                                _ => {}
-                            }
                         }
                         KeyCode::Char(c) => {
                             text_input.push(c);
@@ -202,11 +148,65 @@ pub fn run(commands: &[Command]) -> io::Result<Option<String>> {
                         KeyCode::Backspace => {
                             text_input.pop();
                         }
+                        _ if current_placeholder.choices.is_some() => {
+                            let options = current_placeholder.choices.as_ref().unwrap();
+
+                            match key.code {
+                                KeyCode::Down | KeyCode::Char('j') => {
+                                    let next = match option_state.selected() {
+                                        Some(i) if i >= options.len() => 0,
+                                        Some(i) => i + 1,
+                                        None => 0,
+                                    };
+                                    option_state.select(Some(next));
+                                }
+                                KeyCode::Up | KeyCode::Char('k') => {
+                                    let prev = match option_state.selected() {
+                                        Some(0) => options.len(),
+                                        Some(i) => i - 1,
+                                        None => 0,
+                                    };
+                                    option_state.select(Some(prev));
+                                }
+                                KeyCode::Enter => {
+                                    if let Some(i) = option_state.selected() {
+                                        let value = match i {
+                                            0 => &text_input,
+                                            _ => &options[i - 1],
+                                        };
+
+                                        if !current_placeholder.required || !value.trim().is_empty()
+                                        {
+                                            *command_template = command_template
+                                                .replace(&current_placeholder.raw, &value);
+                                            *current_step += 1;
+                                            *text_input = String::new();
+                                            option_state.select(Some(0));
+
+                                            if *current_step >= placeholders.len() {
+                                                break Ok(Some(command_template.clone()));
+                                            }
+                                        }
+                                    };
+                                }
+
+                                _ => {}
+                            }
+                        }
                         KeyCode::Enter => {
-                            if current_p.required && text_input.trim().is_empty() {
-                            } else {
+                            if !current_placeholder.required || !text_input.trim().is_empty() {
+                                *command_template = command_template
+                                    .replace(&current_placeholder.raw, text_input.trim());
+                                *current_step += 1;
+                                *text_input = String::new();
+                                option_state.select(Some(0));
+
+                                if *current_step >= placeholders.len() {
+                                    break Ok(Some(command_template.clone()));
+                                }
+
                                 *command_template =
-                                    command_template.replace(&current_p.raw, text_input.trim());
+                                    command_template.replace(&current_placeholder.raw, text_input);
                                 *current_step += 1;
                                 *text_input = String::new();
                                 option_state.select(Some(0));
@@ -329,51 +329,37 @@ fn render_prompt_modal(
 
     let inner_area = block.inner(area);
 
-    if let Some(options) = &p.options {
-        let mut items: Vec<ListItem> = Vec::new();
+    let mut items: Vec<ListItem> = Vec::new();
 
-        if !p.required {
-            items.push(ListItem::new(Span::styled(
-                "  (Skip / Empty)",
-                Style::default().fg(Color::DarkGray),
-            )));
-        }
+    let span = if text_input.is_empty() {
+        Span::styled("  (empty)", Style::default().fg(Color::DarkGray).italic())
+    } else {
+        Span::styled(
+            format!("  {text_input}"),
+            Style::default().fg(Color::DarkGray),
+        )
+    };
 
+    items.push(ListItem::new(span));
+
+    if let Some(options) = &p.choices {
         items.extend(
             options
                 .iter()
                 .map(|opt| ListItem::new(format!("  {}", opt))),
         );
-
-        let list = List::new(items)
-            .highlight_style(
-                Style::default()
-                    .fg(Color::Yellow)
-                    .bg(Color::Rgb(50, 50, 50))
-                    .add_modifier(Modifier::BOLD),
-            )
-            .highlight_symbol("> ");
-
-        f.render_stateful_widget(list, inner_area, option_state);
-    } else {
-        let text_layout = Layout::default()
-            .constraints([
-                Constraint::Length(1),
-                Constraint::Length(3),
-                Constraint::Min(0),
-            ])
-            .split(inner_area);
-
-        let input_widget = Paragraph::new(format!("{}_", text_input))
-            .style(Style::default().fg(Color::Yellow))
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Type value and press Enter "),
-            );
-
-        f.render_widget(input_widget, text_layout[1]);
     }
+
+    let list = List::new(items)
+        .highlight_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .bg(Color::Rgb(50, 50, 50))
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("> ");
+
+    f.render_stateful_widget(list, inner_area, option_state);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
