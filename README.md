@@ -12,17 +12,17 @@ It's just a binary, download and add to `$PATH`
 Available systems:
 - AArch64 (ARM64) Linux
 ```bash
-curl -sSL https://github.com/cekita-ar/this/releases/download/latest/aarch64-linux-this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
+curl -sSL https://github.com/cekita-ar/this/releases/latest/download/aarch64-linux-this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
 ```
 
 - x86_64 Linux
 ```bash
-curl -sSL https://github.com/cekita-ar/this/releases/download/latest/x86_64-linux-this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
+curl -sSL https://github.com/cekita-ar/this/releases/latest/download/x86_64-linux-this -o this && chmod +x ./this && sudo mv ./this ~/.local/bin
 ```
 
 - x86_64 Windows
 ```ps1
-curl -sSL "https://github.com/cekita-ar/this/releases/download/latest/x86_64-windows-this.exe" -OutFile "this.exe" ; Move-Item -Path "this.exe" -Destination "C:\Windows\System32\"
+curl -sSL "https://github.com/cekita-ar/this/releases/latest/download/x86_64-windows-this.exe" -OutFile "this.exe" ; Move-Item -Path "this.exe" -Destination "C:\Windows\System32\"
 ```
 
 ## Syntax and usage:
