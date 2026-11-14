@@ -204,16 +204,6 @@ pub fn run(commands: &[Command]) -> io::Result<Option<String>> {
                                 if *current_step >= placeholders.len() {
                                     break Ok(Some(command_template.clone()));
                                 }
-
-                                *command_template =
-                                    command_template.replace(&current_placeholder.raw, text_input);
-                                *current_step += 1;
-                                *text_input = String::new();
-                                option_state.select(Some(0));
-
-                                if *current_step >= placeholders.len() {
-                                    break Ok(Some(command_template.clone()));
-                                }
                             }
                         }
                         _ => {}
